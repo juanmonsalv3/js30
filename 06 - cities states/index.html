@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="https://fav.farm/🔥" />
+</head>
+
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+  <script>
+    const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+
+    const cities = [];
+
+    fetch(endpoint)
+      .then((response) => response.json())
+      .then((data) => cities.push(...data));
+
+
+    function findMatches(search) {
+      if (!search) return [];
+      const regex = new RegExp(search, 'gi')
+      const filtered = cities.filter((item) => item.city.match(regex) || item.state.match(regex));
+      return filtered;
+    }
+
+    function formatHighlight(text, value) {
+      const regex = new RegExp(value, 'gi');
+      return text.replace(regex, `<span class="hl">${value}</span>`);
+    }
+
+    function getPlaceHTML(place, value) {
+      const city = formatHighlight(place.city, value);
+      const state = formatHighlight(place.state, value);
+
+      return `
+        <li>
+          <span class="name">${city}, ${state}</span>
+          <span class="population">${place.population}</span>
+        </li>
+      `
+    }
+
+    function displayMatches(filtered, value) {
+      const list = document.querySelector('.suggestions');
+      const html = filtered.length === 0
+        ? `<li>Filter for a city</li><li>or a state</li>`
+        : filtered.map(item => getPlaceHTML(item, value)).join('')
+
+      list.innerHTML = html;
+    }
+
+    function onTextChange(event) {
+      const value = event.target.value;
+
+      const matches = findMatches(value);
+      displayMatches(matches, value);
+    }
+
+    const input = document.querySelector('.search');
+    input.addEventListener('keyup', onTextChange);
+  </script>
+</body>
+
+</html>
